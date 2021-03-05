@@ -114,6 +114,10 @@ export CV_CORE_COREV_DV_ROOT = $(CV_CORE_COREVDV_PKG)
 # RISC-V Foundation's RISC-V Compliance Test-suite
 COMPLIANCE_PKG   := $(CORE_V_VERIF)/$(CV_CORE_LC)/vendor_lib/riscv/riscv-compliance
 
+# EMBench benchmarking suite
+EMBENCH_PKG	:= $(CORE_V_VERIF)/$(CV_CORE_LC)/vendor_lib/embench
+EMBENCH_TESTS	:= $(CORE_V_VERIF)/$(CV_CORE_LC)/tests/embench
+
 # TB source files for the CV32E core
 TBSRC_TOP   := $(TBSRC_HOME)/uvmt/uvmt_$(CV_CORE_LC)_tb.sv
 TBSRC_HOME  := $(CORE_V_VERIF)/$(CV_CORE_LC)/tb
@@ -241,6 +245,15 @@ dah:
 	$(CORE_V_VERIF)/bin/run_compliance.sh $(RISCV_ISA)
 
 ###############################################################################
+# EMBench benchmark
+# 	target to check out and run the EMBench suite for code size and speed
+#		
+
+embench:
+	@echo "running EMBench"
+	$(CORE_V_VERIF)/bin/run_embench.py -c $(CV_CORE)
+
+###############################################################################
 # Include the targets/rules for the selected SystemVerilog simulator
 #ifeq ($(SIMULATOR), unsim)
 #include unsim.mk
@@ -295,3 +308,6 @@ clean_riscv-dv:
 
 clean_compliance:
 	rm -rf $(COMPLIANCE_PKG)
+
+clean_embench:
+	rm -rf $(EMBENCH_PKG)
