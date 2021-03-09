@@ -57,6 +57,10 @@ def main():
     print('Must specify a core to benchmark')
     sys.exit(1)
 
+  if args.ccomp == 'notset':
+    print('Must specify a c compiler to benchmark')
+    sys.exit(1)
+
 
 
   print("Hello from the EMBench")
@@ -100,7 +104,7 @@ def main():
   ## build EMBench library
   try: 
     subprocess.run(
-      ['build_all.py', '--arch=corev32', '--board=corev32', '--chip='+args.core, '--ldflags=-T' + paths['bsp'] + '/link.ld'],
+      ['build_all.py', '--arch=corev32', '--board=corev32', '--chip='+args.core, '--cc='+args.ccomp, '--ldflags=-T' + paths['bsp'] + '/link.ld'],
       cwd=paths['embench']
     )
   except:
@@ -120,6 +124,13 @@ def build_parser():
     '--core',
     default='notset',
     help='Core to benchmark'
+  )
+
+  parser.add_argument(
+    '-cc',
+    '--ccomp',
+    default='notset',
+    help='C compiler for benchmark'
   )
 
   return parser

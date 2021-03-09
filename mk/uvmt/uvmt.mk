@@ -251,7 +251,9 @@ dah:
 
 embench:
 	@echo "running EMBench"
-	$(CORE_V_VERIF)/bin/run_embench.py -c $(CV_CORE)
+	$(CORE_V_VERIF)/bin/run_embench.py \
+	-c $(CV_CORE) \
+	-cc $(RISCV_EXE_PREFIX)gcc
 
 ###############################################################################
 # Include the targets/rules for the selected SystemVerilog simulator

@@ -349,12 +349,6 @@ compliance: $(XRUN_COMPLIANCE_PREREQ)
 		+elf_file=$(COMPLIANCE_PKG)/work/$(RISCV_ISA)/$(COMPLIANCE_PROG).elf
 
 
-dummy: dummy2
-	@echo "hello dummy"
-
-dummy2: 
-	@echo "hello dummy2"
-
 
 ###############################################################################
 # Use Google instruction stream generator (RISCV-DV) to create new test-programs
