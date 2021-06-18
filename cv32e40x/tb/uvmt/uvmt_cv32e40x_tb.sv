@@ -163,14 +163,14 @@ bind cv32e40x_wrapper
     uvmt_cv32e40x_interrupt_assert interrupt_assert_i(.mcause_n({cs_registers_i.mcause_n[31], cs_registers_i.mcause_n[4:0]}),
                                                       .mip(cs_registers_i.mip),
                                                       .mie_q(cs_registers_i.mie_q),
-                                                      .mie_n(cs_registers_i.mie_bypass_o),
+                                                      .mie_n(cs_registers_i.mie_o),
                                                       .mstatus_mie(cs_registers_i.mstatus_q.mie),
                                                       .mtvec_mode_q(cs_registers_i.mtvec_q[1:0]),
                                                       .if_stage_instr_rvalid_i(if_stage_i.m_c_obi_instr_if.s_rvalid.rvalid),
                                                       .if_stage_instr_rdata_i(if_stage_i.m_c_obi_instr_if.resp_payload.rdata),
                                                       .id_stage_instr_valid_i(id_stage_i.if_id_pipe_i.instr_valid),
                                                       .id_stage_instr_rdata_i(id_stage_i.if_id_pipe_i.instr.bus_resp.rdata),
-                                                      .branch_taken_ex(id_stage_i.branch_taken_ex_o),
+                                                      .branch_taken_ex(controller_i.controller_fsm_i.branch_taken_ex),
                                                       .ctrl_fsm_cs(controller_i.controller_fsm_i.ctrl_fsm_cs),
                                                       .debug_mode_q(controller_i.controller_fsm_i.debug_mode_q),
                                                       .*);
@@ -178,7 +178,8 @@ bind cv32e40x_wrapper
     // Debug assertion and coverage interface
 
     // Instantiate debug assertions
-    
+    // TODO: commented for new conroller
+    /*
     uvmt_cv32e40x_debug_cov_assert_if debug_cov_assert_if(    
       .clk_i(clknrst_if.clk),
       .rst_ni(clknrst_if.reset_n),
@@ -251,7 +252,7 @@ bind cv32e40x_wrapper
     );
 
     uvmt_cv32e40x_debug_assert u_debug_assert(.cov_assert_if(debug_cov_assert_if));
-
+    */
     /**
     * ISS WRAPPER instance:
     */   
@@ -302,8 +303,8 @@ bind cv32e40x_wrapper
       // Advance acknowledged interrupt to ISS when next valid instruction decode executes
       // Ignoring any instructon decodes in debug mode
       wire id_start = dut_wrap.cv32e40x_wrapper_i.core_i.id_stage_i.id_valid_o &
-                      dut_wrap.cv32e40x_wrapper_i.core_i.is_decoding  &
-                      ~dut_wrap.cv32e40x_wrapper_i.core_i.debug_mode;
+                      dut_wrap.cv32e40x_wrapper_i.core_i.ctrl_fsm.is_decoding  &
+                      ~dut_wrap.cv32e40x_wrapper_i.core_i.ctrl_fsm.debug_mode;
 
       assign irq_enabled = dut_wrap.cv32e40x_wrapper_i.irq_i & dut_wrap.cv32e40x_wrapper_i.core_i.cs_registers_i.mie_n;
 
@@ -407,15 +408,16 @@ bind cv32e40x_wrapper
       logic [31:0] count_issue;
       logic [31:0] count_retire;
 
+      //TODO: commented section below is due to controller change
       always @(posedge clknrst_if.clk or negedge clknrst_if.reset_n) begin
         if (!clknrst_if.reset_n) begin
             count_issue <= 32'h0;
         end else begin
-            if ((dut_wrap.cv32e40x_wrapper_i.core_i.id_stage_i.id_valid_o && dut_wrap.cv32e40x_wrapper_i.core_i.is_decoding && !dut_wrap.cv32e40x_wrapper_i.core_i.id_stage_i.multi_cycle_id_stall &&
-               !dut_wrap.cv32e40x_wrapper_i.core_i.controller_i.controller_fsm_i.illegal_insn_i) ||
-                (dut_wrap.cv32e40x_wrapper_i.core_i.is_decoding && dut_wrap.cv32e40x_wrapper_i.core_i.controller_i.controller_fsm_i.ebrk_insn_i &&
-                 !dut_wrap.cv32e40x_wrapper_i.core_i.controller_i.debug_trigger_match_i &&
-                (dut_wrap.cv32e40x_wrapper_i.core_i.controller_i.controller_fsm_i.ebrk_force_debug_mode || dut_wrap.cv32e40x_wrapper_i.core_i.controller_i.controller_fsm_i.debug_mode_q))) begin
+            if ((dut_wrap.cv32e40x_wrapper_i.core_i.id_stage_i.id_valid_o && dut_wrap.cv32e40x_wrapper_i.core_i.ctrl_fsm.is_decoding && !dut_wrap.cv32e40x_wrapper_i.core_i.id_stage_i.multi_cycle_id_stall &&
+               !dut_wrap.cv32e40x_wrapper_i.core_i.id_stage_i.illegal_insn) ||
+                (dut_wrap.cv32e40x_wrapper_i.core_i.ctrl_fsm.is_decoding && dut_wrap.cv32e40x_wrapper_i.core_i.id_stage_i.ebrk_insn &&
+                 !dut_wrap.cv32e40x_wrapper_i.core_i.controller_i.debug_trigger_match_id_i &&
+                (/*dut_wrap.cv32e40x_wrapper_i.core_i.controller_i.controller_fsm_i.ebrk_force_debug_mode || */ dut_wrap.cv32e40x_wrapper_i.core_i.controller_i.controller_fsm_i.debug_mode_q))) begin
                 count_issue <= count_issue + 1;
             end
         end
@@ -441,7 +443,10 @@ bind cv32e40x_wrapper
             unique case(debug_req_state)
                 INACTIVE: begin
                     iss_wrap.b1.haltreq <= 1'b0;
+                    
 
+                    // TODO: commented for new conroller
+                    /* 
                     // Only drive haltreq if we have an external request
                     if (dut_wrap.cv32e40x_wrapper_i.core_i.controller_i.controller_fsm_i.ctrl_fsm_cs inside {cv32e40x_pkg::DBG_TAKEN_ID, cv32e40x_pkg::DBG_TAKEN_IF} &&
                         dut_wrap.cv32e40x_wrapper_i.core_i.controller_i.controller_fsm_i.debug_req_pending) begin
@@ -452,6 +457,7 @@ bind cv32e40x_wrapper
                             iss_wrap.b1.haltreq <= 1'b1;
                         end
                     end
+                    */
                 end
                 DBG_TAKEN: begin
                     // Assert haltreq when we are in sync
@@ -499,7 +505,7 @@ bind cv32e40x_wrapper
      uvm_config_db#(virtual uvmt_cv32e40x_core_status_if    )::set(.cntxt(null), .inst_name("*"), .field_name("core_status_vif"),     .value(core_status_if)    );     
      uvm_config_db#(virtual uvmt_cv32e40x_step_compare_if   )::set(.cntxt(null), .inst_name("*"), .field_name("step_compare_vif"),    .value(step_compare_if));
      uvm_config_db#(virtual uvmt_cv32e40x_isa_covg_if       )::set(.cntxt(null), .inst_name("*"), .field_name("isa_covg_vif"),        .value(isa_covg_if));
-     uvm_config_db#(virtual uvmt_cv32e40x_debug_cov_assert_if)::set(.cntxt(null), .inst_name("*.env"), .field_name("debug_cov_vif"),.value(debug_cov_assert_if));
+     //uvm_config_db#(virtual uvmt_cv32e40x_debug_cov_assert_if)::set(.cntxt(null), .inst_name("*.env"), .field_name("debug_cov_vif"),.value(debug_cov_assert_if));
       
      // Make the DUT Wrapper Virtual Peripheral's status outputs available to the base_test
      uvm_config_db#(bit      )::set(.cntxt(null), .inst_name("*"), .field_name("tp"),     .value(1'b0)        );

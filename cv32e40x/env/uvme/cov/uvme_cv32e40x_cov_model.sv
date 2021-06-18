@@ -31,7 +31,8 @@ class uvme_cv32e40x_cov_model_c extends uvm_component;
 
    uvme_rv32isa_covg   isa_covg;   
    uvme_interrupt_covg interrupt_covg;
-   uvme_debug_covg debug_covg;
+   //TODO: commented due to controller change
+   //uvme_debug_covg debug_covg;
 
    `uvm_component_utils_begin(uvme_cv32e40x_cov_model_c)
       `uvm_field_object(cfg  , UVM_DEFAULT)
@@ -107,8 +108,10 @@ function void uvme_cv32e40x_cov_model_c::build_phase(uvm_phase phase);
    interrupt_covg = uvme_interrupt_covg::type_id::create("interrupt_covg", this);
    uvm_config_db#(uvme_cv32e40x_cntxt_c)::set(this, "interrupt_covg", "cntxt", cntxt);
 
-   debug_covg = uvme_debug_covg::type_id::create("debug_covg", this);
-   uvm_config_db#(uvme_cv32e40x_cntxt_c)::set(this, "debug_covg", "cntxt", cntxt);
+   
+   //TODO: commented due to controller change
+   //debug_covg = uvme_debug_covg::type_id::create("debug_covg", this);
+   //uvm_config_db#(uvme_cv32e40x_cntxt_c)::set(this, "debug_covg", "cntxt", cntxt);
    
 endfunction : build_phase
 

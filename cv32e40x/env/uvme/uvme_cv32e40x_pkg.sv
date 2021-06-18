@@ -58,7 +58,8 @@ package uvme_cv32e40x_pkg;
    
    // Environment components
    `include "uvme_interrupt_covg.sv"
-   `include "uvme_debug_covg.sv"
+   //TODO: commented due to controller change
+   //`include "uvme_debug_covg.sv"
    `include "uvme_rv32isa_covg.sv"
    `include "uvme_cv32e40x_cov_model.sv"
    `include "uvme_cv32e40x_sb.sv"

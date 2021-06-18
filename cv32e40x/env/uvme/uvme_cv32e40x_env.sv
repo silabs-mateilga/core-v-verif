@@ -264,10 +264,13 @@ function void uvme_cv32e40x_env_c::create_cov_model();
       `uvm_fatal("CNTXT", $sformatf("No uvmt_cv32e40x_isa_covg_if found in config database"))
    end
 
+   //TODO: commented for controller change
+   /*
    void'(uvm_config_db#(virtual uvmt_cv32e40x_debug_cov_assert_if)::get(this, "", "debug_cov_vif", cntxt.debug_cov_vif));
    if (cntxt.debug_cov_vif == null) begin
       `uvm_fatal("CNTXT", $sformatf("No uvmt_cv32e40x_debug_cov_assert_if found in config database"))
    end
+   */
 endfunction: create_cov_model
 
 
